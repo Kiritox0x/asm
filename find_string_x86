@@ -1,0 +1,117 @@
+section .data
+	msg1 db	"Input string a :"
+	len1 equ $-msg1
+	msg2 db	"Input string b :"
+	len2 equ $-msg2
+	
+section .bss
+	stra resb 100
+	lena resd 1
+	strb resb 20
+	lenb resd 1
+	count	resd 1
+
+section .text
+	global _start
+
+print:
+	push eax
+	push ebx
+	mov eax, 4
+	mov ebx, 1
+	int 80h	
+	pop ebx	
+	pop eax
+	ret
+
+scan:
+	push eax
+	push ebx
+	mov eax, 3
+	mov ebx, 0
+	int 80h
+	pop ebx
+	pop eax
+	ret
+
+get_length:     ; get length of buffer start at ecx and return at ecx
+	push edi
+	push eax
+	mov edi, ecx
+	mov ecx, -1
+	mov al, 0
+	cld
+	repne scasb
+	not ecx
+	sub ecx, 2
+	pop eax
+	pop edi
+
+_start:
+	mov ecx, msg1
+	mov edx, len1
+	call print
+
+	mov ecx, stra
+	mov edx, 100	
+	call scan
+	call get_length
+	mov [lena], ecx
+	
+	mov ecx, msg2
+	mov edx, len2
+	call print
+
+	mov ecx, strb
+	mov edx, 100
+	call scan
+	call get_length
+	mov [lenb], ecx
+	
+	xor edx, edx   ;edx is count variable
+	xor edi, edi   ;edi is i
+.L1:
+	xor esi, esi   ;esi is j
+	mov ecx, 1	   ;ecx is flag
+
+.L2:
+	mov eax, stra
+	add eax, esi
+	add eax, edi
+	mov ebx, strb
+	add ebx, esi
+	cmp byte[eax] ,byte[ebx]
+	jne .break
+	inc esi
+	cmp esi, [lenb]
+	jl .L2
+	jmp .checkflag
+
+.break:
+	mov ecx, 0
+	jmp .checkflag
+	
+.checkflag:
+	cmp ecx, 1
+	je	.incCount
+	jmp .nextLoop
+
+.incCount:
+	inc edx
+
+.nextLoop:
+	cmp edi, [lena]
+	jl	.L1
+
+	mov ecx, edx
+	mov edi, 1
+	call print
+
+	mov eax, 1
+	mov ebx, 0
+	int 80h
+
+
+
+
+	
